@@ -33,7 +33,7 @@ jobs:
       WIF_PROVIDER: ${{ startsWith(github.ref, 'refs/tags/v') && vars.PROD_WIF_PROVIDER || vars.DEV_WIF_PROVIDER }}
       DEPLOY_SA: ${{ startsWith(github.ref, 'refs/tags/v') && vars.PROD_DEPLOY_SA || vars.DEV_DEPLOY_SA }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
