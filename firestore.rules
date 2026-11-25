@@ -1,0 +1,74 @@
+rules_version = '2';
+
+// Every user owns exactly one subtree: users/{uid}.
+// Sensitive documents must carry an "enc" envelope ({v, iv, ct}) and no
+// plaintext content fields. The server never holds the key, so the
+// operator can see only the metadata listed in META below.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function owner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    function isEnvelope(e) {
+      return e is map
+        && e.keys().hasOnly(['v', 'iv', 'ct'])
+        && e.v is int && e.iv is string && e.ct is string
+        && e.ct.size() < 400000;
+    }
+
+    // A sensitive doc = enc envelope + only the plaintext metadata keys allowed.
+    function encryptedOnly(allowedMeta) {
+      return request.resource.data.keys().hasOnly(allowedMeta.concat(['enc', 'updatedAt']))
+        && isEnvelope(request.resource.data.enc);
+    }
+
+    match /users/{uid} {
+      // META: reminder settings, timezone, active cycle pointer, push tokens.
+      allow read, delete: if owner(uid);
+      allow create, update: if owner(uid)
+        && request.resource.data.keys().hasOnly([
+              'timezone', 'reminderTime', 'channels', 'email', 'pushTokens',
+              'activeCycleId', 'cycleStart', 'lastCheckin', 'reviewsDone',
+              'lastSent', 'createdAt', 'updatedAt'
+            ]);
+
+      // Wrapped data key. Useless without the passphrase or recovery key.
+      match /vault/{docId} {
+        allow read, write: if owner(uid);
+      }
+
+      match /cycles/{cycleId} {
+        allow read, delete: if owner(uid);
+        allow create, update: if owner(uid)
+          && encryptedOnly(['number', 'startDate', 'status', 'prevCycleId']);
+
+        match /audit/{docId} {
+          allow read, delete: if owner(uid);
+          allow create, update: if owner(uid) && encryptedOnly([]);
+        }
+        match /phases/{phaseId} {
+          allow read, delete: if owner(uid);
+          allow create, update: if owner(uid) && encryptedOnly(['phase']);
+        }
+        // Doc id = yyyy-mm-dd. Existence and date are visible, content is not.
+        match /checkins/{date} {
+          allow read, delete: if owner(uid);
+          allow create, update: if owner(uid) && encryptedOnly(['date']);
+        }
+        match /metrics/{docId} {
+          allow read, delete: if owner(uid);
+          allow create, update: if owner(uid) && encryptedOnly(['weekStart']);
+        }
+        match /reviews/{reviewId} {
+          allow read, delete: if owner(uid);
+          allow create, update: if owner(uid) && encryptedOnly(['index', 'day']);
+        }
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,9 @@
+env             = "dev"
+project_id      = "REPLACE-bb-dev"      # e.g. jay-blackbook-dev
+custom_domain   = ""                   # dev uses <project>.web.app
+github_owner    = "REPLACE_GITHUB_USERNAME"
+github_repo     = "black-notebook"
+billing_account = "REPLACE-XXXXXX-XXXXXX-XXXXXX"
+monthly_budget  = 200
+alert_email     = "REPLACE@example.com"
+vapid_key       = ""

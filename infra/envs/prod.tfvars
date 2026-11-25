@@ -1,0 +1,9 @@
+env             = "prod"
+project_id      = "REPLACE-bb-prod"     # e.g. jay-blackbook
+custom_domain   = "bb.jay.im"
+github_owner    = "REPLACE_GITHUB_USERNAME"
+github_repo     = "black-notebook"
+billing_account = "REPLACE-XXXXXX-XXXXXX-XXXXXX"
+monthly_budget  = 500
+alert_email     = "REPLACE@example.com"
+vapid_key       = ""

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+lib/
+.env.local
+.env.production
+.firebase/
+*.log
+functions/.env.*
+infra/.terraform/
+*.tfstate
+*.tfstate.*
